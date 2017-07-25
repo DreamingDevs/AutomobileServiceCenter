@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Http
+@using ASC.Utilities
+@inject IHttpContextAccessor UserHttpContext
+@{
+    ViewData["Title"] = "Error";
+    Layout = !UserHttpContext.HttpContext.User.Identity.IsAuthenticated ? "_layout" : "_SecureLayout";
+}
+
+<div class="row">
+    <div class="col s12">
+        <div class="card-panel orange lighten-1 margin-bottom-50px margin-top-50px">
+            <span class="white-text">
+                An error occurred while processing your request. Please contact customer service with following 
+                Ticket No. @ViewData["ExceptionId"]
+            </span>
+        </div>
+    </div>
+</div>

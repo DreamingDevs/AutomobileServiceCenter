@@ -1,0 +1,192 @@
+﻿@model ASC.Web.Areas.Promotions.Models.PromotionsViewModel
+@{ 
+    Layout = "_SecureLayout";
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px">
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Promotions</h5>
+        </div>
+        <div class="divider"></div>
+        <div class="col s12 padding-bottom-15px">
+            @if (Model.Promotions != null)
+            {
+                @* Display List of Promotions *@
+                <table class="highlight centered" id="tblPromotions">
+                    <thead>
+                        <tr>
+                            <th data-field="RowKey">Row Key</th>
+                            <th data-field="PartitionKey">Type</th>
+                            <th data-field="Header">Header</th>
+                            <th data-field="Content">Content</th>
+                            <th data-field="IsActive">Is Deleted</th>
+                            <th data-field="IsActiveImg">Is Deleted</th>
+                            <th data-field="Actions">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var promotion in Model.Promotions)
+                        {
+                            <tr>
+                                <td>@promotion.RowKey</td>
+                                <td>@promotion.PartitionKey</td>
+                                <td>@promotion.Header</td>
+                                <td>@promotion.Content</td>
+                                <td>@promotion.IsDeleted</td>
+                                <td><img src="@(promotion.IsDeleted ? "/images/green_tick.png" : "/images/red_cross.png")" /></td>
+                                <td><i class="small material-icons edit cursor-hand">mode_edit</i></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                @* In case of No records, display no records message *@
+                <div class="card blue-grey lighten-1">
+                    <div class="card-content white-text">
+                        <span class="card-title">No Promotions!!!</span>
+                        <p>
+                            No Promotions found, please add a Promotion to system.
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row"></div>
+
+    @* Details Section *@
+    <div class="row z-depth-3">
+        <div class="col s12 padding-0px">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Promotion Details</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-controller="Promotions" asp-action="Promotion" method="post" class="col s12" id="formPromotion">
+                <div class="row">
+                    <input type="hidden" asp-for="IsEdit" />
+                    <input type="hidden" asp-for="PromotionInContext.RowKey" />
+                    <div class="input-field col s4">
+                        <select id="PromotionInContext_PartitionKey"
+                                asp-for="PromotionInContext.PartitionKey"
+                                asp-items="@(new SelectList(ViewBag.PromotionTypes,"Name","Name"))"
+                                required="required">
+                            <option value="">--Select--</option>
+                        </select>
+                        <label>Type</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <input asp-for="PromotionInContext.Header" class="validate" />
+                        <label asp-for="PromotionInContext.Header"></label>
+                    </div>
+                    <div class="input-field col s4">
+                        <div class="switch">
+                            <label>
+                                Is Deleted
+                                <input asp-for="PromotionInContext.IsDeleted" class="validate" />
+                                <span class="lever"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <textarea asp-for="PromotionInContext.Content" class="materialize-textarea validate"></textarea>
+                        <label asp-for="PromotionInContext.Content"></label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12 right-align">
+                        <button class="btn waves-effect waves-light btnSubmit" type="submit" name="action">
+                            Create
+                            <i class="material-icons right">send</i>
+                        </button>
+                        <button class="btn waves-effect waves-light reset  red lighten-1" type="button" name="action">
+                            Reset
+                        </button>
+                    </div>
+                    <div class="row col s12 right-align" asp-validation-summary="All"></div>
+                </div>
+            </form>
+
+        </div>
+        <div class="row"></div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable to show list of Promotions
+            var table = $('#tblPromotions').DataTable({
+                'pageLength': 3,
+                // Number of records to be displayed per page
+                'lengthMenu': [[3, 5, 10, -1], [3, 5, 10, 'All']]
+            });
+
+            // Set Styles for DataTable and Number of Records to be displayed dropdown
+            $('#tblPromotions').css("width", "100%");
+            $('select[name="tblPromotions_length"]').material_select();
+
+            $("select[required]").css({ display: "block", position: 'absolute', visibility: 'hidden' });
+            // Initialize Select
+            $('select').material_select();
+
+            // Get the column API object
+            var rowKeyColumn = table.column(0);
+            rowKeyColumn.visible(false);
+
+            var contentColumn = table.column(3);
+            contentColumn.visible(false);
+
+            var isActiveColumn = table.column(4);
+            isActiveColumn.visible(false);
+
+            // Handle Reset fucntionality
+            $(document).on('click', '.reset', function () {
+                $('#formPromotion')[0].reset();
+                $('.btnSubmit').text('Create');
+                $('#IsEdit').val('False');
+
+                // Remove Partition key disabled attribute
+                $('#PromotionInContext_PartitionKey').material_select('destroy');
+                $('#PromotionInContext_PartitionKey').removeAttr('disabled');
+                $('#PromotionInContext_PartitionKey').material_select();
+
+                // Remove the validation error messages.
+                $('.validation-summary-valid').find("ul").html('');
+            });
+
+            // On click of Edit icon, populate the details section with details of service engineer
+            $(document).on('click', '.edit', function () {
+                var promotion = $('#tblPromotions').DataTable().row($(this).parents('tr')).data();
+
+                $('#IsEdit').val('True');
+                // Map Row Key
+                $('#PromotionInContext_RowKey').val(promotion[0]);
+
+                // Set Partition Key Dropdown and re-initialize Material Select
+                $('#PromotionInContext_PartitionKey').material_select('destroy');
+                $('#PromotionInContext_PartitionKey option:contains(' + promotion[1] + ')').prop('selected', true);
+                $('#PromotionInContext_PartitionKey').material_select();
+
+                // Map Header
+                $('#PromotionInContext_Header').val(promotion[2]);
+                $('#PromotionInContext_Header').addClass('valid');
+                // Map Header
+                $('#PromotionInContext_Content').val(promotion[3]);
+                $('#PromotionInContext_Content').addClass('valid');
+                // Map IsActive
+                $('#PromotionInContext_IsDeleted').prop('checked', promotion[4] === 'True' ? true : false);
+
+                $('.btnSubmit').text('Save');
+                Materialize.updateTextFields();
+            });
+
+        });
+    </script>
+}

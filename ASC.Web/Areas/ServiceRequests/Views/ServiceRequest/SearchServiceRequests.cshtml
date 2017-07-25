@@ -1,0 +1,172 @@
+﻿@model ASC.Web.Areas.ServiceRequests.Models.SearchServiceRequestsViewModel
+@using System.Globalization
+@{
+    Layout = "_SecureLayout";
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px">
+
+    @* Search Input Section *@
+    <div class="row z-depth-3">
+        <div class="col s12 padding-0px">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Search Service Requests</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-controller="ServiceRequest" asp-action="SearchServiceRequest" method="post" class="col s12">
+                <div class="row">
+                    <div class="input-field col s4">
+                        <input asp-for="RequestedDate" type="date" class="datepicker" id="dtRequestedDate" />
+                        <label asp-for="RequestedDate"></label>
+                    </div>
+                    <div class="input-field col s4">
+                        <input type="text" asp-for="Email" id="txtEmail" />
+                        <label asp-for="Email"></label>
+                    </div>
+                    <div class="input-field col s4 right-align">
+                        <button class="btn waves-effect waves-light btnSubmit" type="button" name="action">
+                            Search
+                            <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+                    <div class="row col s12 right-align" asp-validation-summary="All"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Search Results</h5>
+        </div>
+        <div class="divider"></div>
+        <div class="col s12 padding-bottom-15px">
+            @* Display Searchc Results *@
+            <table class="highlight centered" id="tblServiceRequests">
+                <thead>
+                    <tr>
+                        <th data-field="RowKey">RowKey</th>
+                        <th data-field="PartitionKey">PartitionKey</th>
+                        <th data-field="PartitionKey">User</th>
+                        <th data-field="Status">Status</th>
+                        <th data-field="RequestedDate">Requested Date</th>
+                        <th data-field="ServiceEngineer">Service Engineer</th>
+                        <th data-field="Actions">View</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="row"></div>
+</div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            // Need to pass Verification Token to get Request Validated for Forgery
+            var token = $('input[type=hidden][name=__RequestVerificationToken]', document).val();
+            $.ajaxSetup({
+                // Disable caching of AJAX responses
+                cache: false,
+                headers: { 'RequestVerificationToken': token }
+            });
+
+            // Datepicker
+            var datePicker = $('.datepicker').pickadate({
+                selectMonths: true,
+                selectYears: 15
+            });
+
+            // Initialize DataTable to show list of Service Requests
+            var table = $('#tblServiceRequests').DataTable({
+                // Make AJAX call based to get Search results from Server
+                'ajax': {
+                    'url': '@Url.Action("SearchServiceRequestResults", "ServiceRequest")',
+                    'type': 'GET'
+                },
+                'pageLength': 3,
+                // Number of records to be displayed per page
+                'lengthMenu': [[3, 5, 10, -1], [3, 5, 10, 'All']],
+                // Remove default Sorting
+                'sorting': [],
+                // Set Columns
+                'columns': [
+                    { 'data': 'RowKey', 'visible': false  },
+                    { 'data': 'PartitionKey', 'visible': false },
+                    { 'data': 'PartitionKey' },
+                    { 'data': 'Status', 'width': '20%' },
+                    { 'data': 'RequestedDate' },
+                    { 'data': 'ServiceEngineer' },
+                    { 'data': 'View', }
+                ],
+                // Set Custom Column definitions and define their render HTML.
+                "aoColumnDefs": [
+                    {
+                        "aTargets": [3],
+                        "mData": "Status",
+                        "mRender": function (data, type, full) {
+                            switch (data) {
+                                case 'New':
+                                case 'Initiated':
+                                case 'InProgress':
+                                case 'Completed':
+                                    return '<div class="white-text teal lighten-1 center-align"><span>' + data + '</span></div>';
+                                case 'RequestForInformation':
+                                case 'Pending':
+                                case 'Denied':
+                                    return '<div class="white-text red lighten-1 center-align"><span>' + data + '</span></div>';
+                                case 'PendingCustomerApproval':
+                                    return '<div class="white-text orange lighten-1 center-align"><span>' + data + '</span></div>';
+                                default:
+                                    return '';
+                            }
+                        }
+                    },
+                    {
+                        "aTargets": [4],
+                        "mData": "RequestedDate",
+                        "mRender": function (data, type, full) {
+                            var date = new Date(data);
+                            var month = date.getMonth() + 1;
+                            var day = date.getDate();
+                            return (month.length > 1 ? month : "0" + month) + "/" +
+                                   (date.getDate() > 9 ? date.getDate() : "0" + date.getDate()) + "/" +
+                                   date.getFullYear();
+                        }
+                    },
+                    {
+                        "aTargets": [6],
+                        "mData": "View",
+                        "mRender": function (data, type, full) {
+                            return '<i class="small material-icons view cursor-hand">pageview</i>';
+                        }
+                    }
+                ]
+            });
+
+            // Set Styles for DataTable and Number of Records to be displayed dropdown
+            $('#tblServiceRequests').css("width", "100%");
+            $('select[name$="ServiceRequests_length"]').material_select();
+
+             // Search button click event
+            $(document).on('click', '.btnSubmit', function () {
+                table.ajax.url('@Url.Action("SearchServiceRequestResults", "ServiceRequest")' + '?email=' + $('#txtEmail').val() +
+                    '&requestedDate=' + $('#dtRequestedDate').val());
+                table.ajax.reload();
+            });
+
+            // On click of View icon, redirect to Service Request Details View based on RowKey
+            $(document).on('click', '.view', function () {
+                var serviceRequest = $('#tblServiceRequests').DataTable().row($(this).parents('tr')).data();
+
+                // For Service Request Table, populate id with RowKey
+                var id = serviceRequest["RowKey"];
+
+                window.location.href = '@Url.Action("ServiceRequestDetails",
+                                       "ServiceRequest",
+                                       new { Area = "ServiceRequests" })?Id=' + id;
+            });
+        });
+    </script>
+}

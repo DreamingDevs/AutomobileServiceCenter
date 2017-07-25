@@ -1,0 +1,44 @@
+﻿@using Microsoft.Extensions.Options;
+@using ASC.Web.Configuration;
+@inject IOptions<ApplicationSettings> _configurationSettings
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <title>@_configurationSettings.Value.ApplicationTitle</title>
+
+    <!-- CSS Files -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <environment names="Development">
+        <link href="~/css/jquery.dataTables.css" type="text/css" rel="stylesheet" media="screen,projection" />
+        <link href="~/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection" />
+        <link href="~/css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    </environment>
+    <environment names="Staging,Production">
+        <link href="~/css/site.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    </environment>
+</head>
+<body>
+    <!-- Render Body -->
+    @RenderBody()
+
+    <!-- JS Files -->
+    <environment names="Development">
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+        <script src="~/js/materialize.min.js"></script>
+        <script src="~/js/jquery.dataTables.js"></script>
+        <script src="~/js/init.js"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/jqueryBundle.min.js"></script>
+        <script src="~/js/libraryBundle.min.js"></script>
+        <script src="~/js/appBundle.min.js"></script>
+    </environment>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

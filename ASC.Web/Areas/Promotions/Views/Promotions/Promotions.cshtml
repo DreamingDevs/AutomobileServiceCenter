@@ -1,0 +1,51 @@
+﻿@model IEnumerable<ASC.Models.Models.Promotion>
+@{ 
+    Layout = "_SecureLayout";
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px">
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Promotions</h5>
+        </div>
+        <div class="divider"></div>
+        <div class="col s12 padding-bottom-15px divPromotions">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var promotion in Model)
+                {
+                @* Display List of Promotions *@
+                    <div class="col s12 m5">
+                        <div class="card @(promotion.PartitionKey == "Discount" ? "light-green darken-2" : " light-blue darken-2") ">
+                            <div class="card-content white-text">
+                                <span class="card-title">@promotion.Header</span>
+                                <p>
+                                    @promotion.Content
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                @* In case of No records, display no records message *@
+                <div class="card blue-grey lighten-1">
+                    <div class="card-content white-text">
+                        <span class="card-title">No Promotions!!!</span>
+                        <p>
+                            No Promotions found.
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row"></div>
+</div>
+
+@section Scripts{
+
+}

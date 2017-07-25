@@ -1,0 +1,171 @@
+﻿@using Microsoft.AspNetCore.Http
+@using ASC.Utilities
+@using ASC.Web.Data
+@inject IHttpContextAccessor UserHttpContext
+@inject INavigationCacheOperations navigationCache
+
+@{
+    Layout = "_MasterLayout";
+    var currentUser = UserHttpContext.HttpContext.User.GetCurrentUserDetails();
+}
+
+<!-- Header -->
+<header class="secureLayout">
+    <nav class="top-nav blue-grey lighten-1">
+        <div class="nav-wrapper row valign-wrapper">
+            <div class="col s12 valign-wrapper">
+                <a href="#" data-activates="nav-mobile" class="button-collapse top-nav full hide-on-large-only white-text">
+                <i class="material-icons">menu</i></a>
+                <h5><a class="page-title">Automobile Service Center</a></h5>
+            </div>
+        </div>
+    </nav>
+    <!-- Side NavBar -->
+    <ul id="nav-mobile" class="side-nav fixed">
+        <li>
+            <div class="userView">
+                <div class="background blue-grey lighten-1"></div>
+                <a href="#!user"><img class="circle" src="~/images/male.png"></a>
+                <a href="#!name"><span class="white-text name">@currentUser.Name</span></a>
+                <a href="#!email"><span class="white-text email">@currentUser.Email</span></a>
+            </div>
+        </li>
+        @await Component.InvokeAsync("ASC.Utilities.Navigation.LeftNavigation", await navigationCache.GetNavigationCacheAsync())
+        <a id="serviceNotification"></a>
+    </ul>
+    
+</header>
+
+<!-- Render Body -->
+<main class="secureLayout">
+    <div class="row margin-bottom-0px">
+        <div class="col s12">
+            @RenderBody()
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="page-footer blue-grey lighten-1 secureLayout">
+    <div class="row">
+        <div class="col l6 s12">
+            <h5 class="white-text">About Us</h5>
+            <p class="grey-text text-lighten-4">
+                Automobile Service Center is certified Company to perform car services. Our Workshop operations started in the month of October, 2010.
+                We primarily focus on providing better services to our customers, and as a result of the hard work we were awarded as the "Best Service" for the year 2008 and that too within a short period of time.
+            </p>
+
+        </div>
+        <div class="col l3 s12">
+            <h5 class="white-text">Additional Services</h5>
+            <ul>
+                <li><a class="white-text" href="#!">Services</a></li>
+                <li><a class="white-text" href="#!">Finance</a></li>
+                <li><a class="white-text" href="#!">Used Cars</a></li>
+                <li><a class="white-text" href="#!">Insurance</a></li>
+                <li><a class="white-text" href="#!">Driving School</a></li>
+            </ul>
+        </div>
+        <div class="col l3 s12">
+            <h5 class="white-text">Connect</h5>
+            <ul>
+                <li><a class="white-text" href="#!">Facebook</a></li>
+                <li><a class="white-text" href="#!">LinkedIn</a></li>
+                <li><a class="white-text" href="#!">Twitter</a></li>
+                <li><a class="white-text" href="#!">Youtube</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-copyright row margin-bottom-0px">
+        <div class="col s12">
+            <div class="col s8">
+                Powered by <a class="brown-text text-lighten-3" href="http://materializecss.com">Materialize</a>
+            </div>
+            <div class="col s4">
+                @await Html.PartialAsync("_SelectCulture")
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright row margin-bottom-0px"></div>
+</footer>
+
+<form class="hide" method="post" id="logout_form" asp-area="" asp-controller="Account" asp-action="Logout">
+    <input type="submit" value="Logout" />
+</form>
+
+<form class="hide" method="post" id="resetPassword_form" asp-area="" asp-controller="Account" asp-action="InitiateResetPassword"></form>
+
+  <!-- Tap Target Structure -->
+<div class="tap-target cyan hide" data-activates="serviceNotification">
+    <div class="tap-target-content white-text" >
+        <h5 class="padding-left-50px">Status Updated!!!</h5>
+        <p class="white-text padding-left-50px divNotification">The Status of your Service Request has been changed to {$}.</p>
+    </div>
+</div>
+
+<!-- Promotion Template -->
+<div class="promotionTemplate hide">
+    <div class="col s12 m5">
+        <div class="card {Style}">
+            <div class="card-content white-text">
+                <span class="card-title">{Header}</span>
+                <p>
+                    {Content}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+@RenderSection("Scripts", required: false)
+<script src="http://ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.0.min.js"></script>
+<script src="/signalr/hubs"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#ancrLogout').click(function () {
+                $('#logout_form').submit();
+            });
+
+            $('#ancrResetPassword').click(function () {
+                $('#resetPassword_form').submit();
+            });
+
+            $.connection.serviceMessagesHub.client.publishNotification = showNotification;
+            $.connection.serviceMessagesHub.client.publishPromotion = showPromotion;
+
+            function showNotification(data) {
+                var notificationText = $('.divNotification').html();
+                $('.divNotification').html(notificationText.replace('{$}', data.status));
+                $('.tap-target').removeClass('hide');
+
+                $('.tap-target').tapTarget('open');
+                setTimeout(function () {
+                    $('.tap-target').tapTarget('close');
+                    $('.tap-target').addClass('hide');;
+                }, 5000);
+            };
+
+            var counter = 0
+            function showPromotion(data) {
+                counter++;
+                var promotionTemplate = $('.promotionTemplate').clone().html();
+                promotionTemplate = promotionTemplate.replace('{Header}', data.Header);
+                promotionTemplate = promotionTemplate.replace('{Content}', data.Content);
+                promotionTemplate = promotionTemplate.replace('{Style}', data.PartitionKey == 'Discount' ? 'light-green darken-2' : 'light-blue darken-2');
+
+                // Prepend newly added promotion to to divPromotions on Promotions view.
+                $('.divPromotions').prepend(promotionTemplate);
+
+                // show notification counter on the left navigation menu item.
+                $('#ancrPromotions .badge').remove();
+                $('#ancrPromotions').prepend('<span class="new badge">' + counter + '</span>');
+            };
+
+            @* Start the client side HUB *@
+            $.connection.hub.start();
+
+        });
+    </script>
+}

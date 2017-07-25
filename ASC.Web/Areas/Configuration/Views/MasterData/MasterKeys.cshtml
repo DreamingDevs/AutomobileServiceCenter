@@ -1,0 +1,162 @@
+﻿@model ASC.Web.Areas.Configuration.Models.MasterKeysViewModel
+@{ 
+    Layout = "_SecureLayout";
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px">
+
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Master Keys</h5>
+        </div>
+        <div class="divider"></div>
+        <div class="col s12 padding-bottom-15px">
+            @if (Model.MasterKeys != null)
+            {
+                @* Display List of Service Engineers *@
+                <table class="highlight centered" id="tblMasterKeys">
+                    <thead>
+                        <tr>
+                            <th data-field="RowKey">Row Key</th>
+                            <th data-field="PartitionKey">Partition Key</th>
+                            <th data-field="Name">Name</th>
+                            <th data-field="IsActive">Is Active</th>
+                            <th data-field="IsActiveImg">Is Active</th>
+                            <th data-field="Actions">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var masterKey in Model.MasterKeys)
+                        {
+                            <tr>
+                                <td>@masterKey.RowKey</td>
+                                <td>@masterKey.PartitionKey</td>
+                                <td>@masterKey.Name</td>
+                                <td>@masterKey.IsActive</td>
+                                <td><img src="@(masterKey.IsActive ? "/images/green_tick.png" : "/images/red_cross.png")" /></td>
+                                <td><i class="small material-icons edit cursor-hand">mode_edit</i></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                @* In case of No records, display no records message *@
+                <div class="card blue-grey lighten-1">
+                    <div class="card-content white-text">
+                        <span class="card-title">No Service Engineers!!!</span>
+                        <p>
+                            No Master Keys found, please add a Master Key to system.
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row"></div>
+
+    @* Details Section *@
+    <div class="row z-depth-3">
+        <div class="col s12 padding-0px">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Master Key Details</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-controller="MasterData" asp-action="MasterKeys" method="post" class="col s12" id="formMasterKey">
+                <div class="row">
+                    <input type="hidden" asp-for="IsEdit" />
+                    <input type="hidden" asp-for="MasterKeyInContext.RowKey" />
+                    <input type="hidden" asp-for="MasterKeyInContext.PartitionKey" />
+                    <div class="input-field col s4">
+                        <input asp-for="MasterKeyInContext.RowKey" id="Input_MasterKey_RowKey" disabled="disabled" />
+                        <label asp-for="MasterKeyInContext.RowKey"></label>
+                    </div>
+                    <div class="input-field col s4">
+                        <input asp-for="MasterKeyInContext.Name" class="validate" />
+                        <label asp-for="MasterKeyInContext.Name"></label>
+                    </div>
+                    <div class="input-field col s4">
+                        <div class="switch">
+                            <label>
+                                Is Active
+                                <input asp-for="MasterKeyInContext.IsActive" class="validate" />
+                                <span class="lever"></span>
+                            </label>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s12 right-align">
+                            <button class="btn waves-effect waves-light btnSubmit" type="submit" name="action">
+                                Create
+                                <i class="material-icons right">send</i>
+                            </button>
+                            <button class="btn waves-effect waves-light reset  red lighten-1" type="button" name="action">
+                                Reset
+                            </button>
+                        </div>
+                        <div class="row col s12 right-align" asp-validation-summary="All"></div>
+                    </div>
+</form>
+
+        </div>
+        <div class="row"></div>
+
+    </div>
+
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable to show list of Engineers
+            var table = $('#tblMasterKeys').DataTable({
+                'pageLength': 3,
+                // Number of records to be displayed per page
+                'lengthMenu': [[3, 5, 10, -1], [3, 5, 10, 'All']]
+            });
+
+            // Set Styles for DataTable and Number of Records to be displayed dropdown
+            $('#tblMasterKeys').css("width", "100%");
+            $('select[name="tblMasterKeys_length"]').material_select();
+
+            // Get the column API object
+            var partitionKeyColumn = table.column(1);
+            partitionKeyColumn.visible(false);
+
+            var isActiveColumn = table.column(3);
+            isActiveColumn.visible(false);
+
+            // Handle Reset fucntionality
+            $(document).on("click", ".reset", function () {
+                $('#formMasterKey')[0].reset();
+                $('.btnSubmit').text('Create');
+                $('#IsEdit').val('False');
+            });
+
+            // On click of Edit icon, populate the details section with details of service engineer
+            $(document).on('click', '.edit', function () {
+                var user = $('#tblMasterKeys').DataTable().row($(this).parents('tr')).data();
+
+                $('#IsEdit').val('True');
+                // Map Row Key
+                $('#MasterKeyInContext_RowKey').val(user[0]);
+                $('#Input_MasterKey_RowKey').val(user[0]);
+                // Map Partition Key
+                $('#MasterKeyInContext_PartitionKey').val(user[1]);
+                // Map Name
+                $('#MasterKeyInContext_Name').val(user[2]);
+                $('#MasterKeyInContext_Name').addClass('valid');
+                // Map IsActive
+                $('#MasterKeyInContext_IsActive').prop('checked', user[3] === 'True' ? true : false);
+
+                $('.btnSubmit').text('Save');
+                Materialize.updateTextFields();
+            });
+
+        });
+    </script>
+}

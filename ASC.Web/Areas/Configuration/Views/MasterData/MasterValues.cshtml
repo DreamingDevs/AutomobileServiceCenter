@@ -1,0 +1,277 @@
+﻿@model ASC.Web.Areas.Configuration.Models.MasterValuesViewModel
+@{
+    Layout = "_SecureLayout";
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px">
+
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Master Values</h5>
+        </div>
+        <div class="divider"></div>
+        <div class="col s4 padding-bottom-15px">
+            <select id="ddlMasterKeys" asp-items="@(new SelectList(ViewBag.MasterKeys,"RowKey","PartitionKey"))">
+                <option>--Select--</option>
+            </select>
+            <label>Partition Key</label>
+        </div>
+        <div class="col s4 offset-s4 padding-bottom-15px right-align">
+            <a class="modal-trigger waves-effect waves-light" href="#modal1">
+                <img src="~/images/excel.png" />
+            </a>
+        </div>
+        <div class="col s12 padding-bottom-15px">
+            @* Display List of Master Values *@
+            <table class="highlight centered" id="tblMasterValues">
+                <thead>
+                    <tr>
+                        <th data-field="RowKey">Row Key</th>
+                        <th data-field="PartitionKey">Partition Key</th>
+                        <th data-field="Name">Name</th>
+                        <th data-field="IsActive">Is Active</th>
+                        <th data-field="Actions">Edit</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="row"></div>
+
+    @* Details Section *@
+    <div class="row z-depth-3">
+        <div class="col s12 padding-0px">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Master Value Details</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-controller="MasterData" asp-action="MasterValues" method="post" class="col s12" id="formMasterValue">
+                <div class="row">
+                    <input type="hidden" asp-for="IsEdit" />
+                    <input type="hidden" asp-for="MasterValueInContext.RowKey" />
+                    <input type="hidden" asp-for="MasterValueInContext.PartitionKey" />
+                    <div class="input-field col s4">
+                        <input asp-for="MasterValueInContext.RowKey" id="Input_MasterKey_RowKey" disabled="disabled" />
+                        <label asp-for="MasterValueInContext.RowKey"></label>
+                    </div>
+                    <div class="input-field col s4">
+                        <select id="Select_MasterValueInContext_PartitionKey"
+                                asp-for="MasterValueInContext.PartitionKey"
+                                asp-items="@(new SelectList(ViewBag.MasterKeys,"RowKey","PartitionKey"))"
+                                required="required">
+                            <option value="">--Select--</option>
+                        </select>
+                        <label>Partition Key</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <input asp-for="MasterValueInContext.Name" class="validate" />
+                        <label asp-for="MasterValueInContext.Name"></label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s4">
+                        <div class="switch">
+                            <label>
+                                Is Active
+                                <input asp-for="MasterValueInContext.IsActive" class="validate" />
+                                <span class="lever"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="input-field col s8 right-align">
+                        <button class="btn waves-effect waves-light btnSubmit" type="button" name="action">
+                            Create
+                            <i class="material-icons right">send</i>
+                        </button>
+                        <button class="btn waves-effect waves-light reset  red lighten-1" type="button" name="action">
+                            Reset
+                        </button>
+                    </div>
+                    <div class="row col s12 right-align" asp-validation-summary="All"></div>
+                </div>
+            </form>
+
+        </div>
+        <div class="row"></div>
+    </div>
+</div>
+
+<!-- Modal Structure -->
+<div id="modal1" class="modal modal-fixed-footer">
+    <div class="modal-content">
+        <h4>Upload Excel</h4>
+        <p>Upload the Excel file which contains all the master values.</p>
+        <!-- Div to display Errors-->
+        <div class="row hide divErrors">
+            <div class="col s12">
+                <div class="card-panel red lighten-1">
+                    <span class="white-text errors"></span>
+                </div>
+            </div>
+        </div>
+        <!-- Div to display progress -->
+        <div class="progress hide">
+            <div class="indeterminate"></div>
+        </div>
+        <form action="UploadExcel" controller="MasterData" method="post">
+            <div class="file-field input-field">
+                <div class="btn">
+                    <span>File</span>
+                    <input type="file" id="files">
+                </div>
+                <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text">
+                </div>
+                <div class="input-field row right">
+                    <button class="btn waves-effect waves-light btnUpload" type="button" name="action">
+                        Upload
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            // Need to pass Verification Token to get Request Validated for Forgery
+            var token = $('input[type=hidden][name=__RequestVerificationToken]', document).val();
+            $.ajaxSetup({
+                // Disable caching of AJAX responses
+                cache: false,
+                headers: { 'RequestVerificationToken': token }
+            });
+
+            // Initialize DataTable to show list of Master Values
+            var table = $('#tblMasterValues').DataTable({
+                // Make AJAX call based to get Master Values from Server
+                'ajax': {
+                    'url': '@Url.Action("MasterValuesByKey", "MasterData")',
+                    'type': 'GET'
+                },
+                'pageLength': 3,
+                // Number of records to be displayed per page
+                'lengthMenu': [[3, 5, 10, -1], [3, 5, 10, 'All']],
+                // Set Columns
+                'columns': [
+                    { 'data': 'RowKey' },
+                    { 'data': 'PartitionKey' },
+                    { 'data': 'Name' },
+                    { 'data': 'IsActive' },
+                    { 'data': 'Actions', }
+                ],
+                // Set Custom Column definitions and define their render HTML.
+                "aoColumnDefs": [
+                    {
+                        "aTargets": [3],
+                        "mData": "IsActive",
+                        "mRender": function (data, type, full) {
+                            if (data === true)
+                                return '<img src="/images/green_tick.png" />';
+                            else
+                                return '<img src="/images/red_cross.png" />';
+                        }
+                    },
+                    {
+                        "aTargets": [4],
+                        "mData": "Actions",
+                        "mRender": function (data, type, full) {
+                            return '<i class="small material-icons edit cursor-hand">mode_edit</i>';
+                        }
+                    }
+                ]
+        });
+
+            // Set Styles for DataTable and Number of Records to be displayed dropdown
+            $('#tblMasterValues').css("width", "100%");
+            $('select[name="tblMasterValues_length"]').material_select();
+            $("select[required]").css({ display: "block", position: 'absolute', visibility: 'hidden' });
+            // Initialize Master Key Select
+            $('select').material_select();
+
+            // Handle Reset fucntionality
+            $(document).on("click", ".reset", function () {
+                $('#formMasterValue')[0].reset();
+                $('.btnSubmit').text('Create');
+                $('#IsEdit').val('False');
+
+                // Remove Partition key disabled attribute
+                $('#Select_MasterValueInContext_PartitionKey').material_select('destroy');
+                $('#Select_MasterValueInContext_PartitionKey').removeAttr('disabled');
+                $('#Select_MasterValueInContext_PartitionKey').material_select();
+
+                // Remove the validation error messages.
+                $('.validation-summary-valid').find("ul").html('');
+            });
+
+            // On click of Edit icon, populate the details section with details of service engineer
+            $(document).on('click', '.edit', function () {
+                var user = $('#tblMasterValues').DataTable().row($(this).parents('tr')).data();
+
+                $('#IsEdit').val('True');
+                // Map Row Key
+                $('#MasterValueInContext_RowKey').val(user["RowKey"]);
+                $('#Input_MasterKey_RowKey').val(user["RowKey"]);
+
+                // Map Partition Key
+                $('#MasterValueInContext_PartitionKey').val(user["PartitionKey"]);
+                // Set Partition Key Dropdown and re-initialize Material Select
+                $('#Select_MasterValueInContext_PartitionKey').material_select('destroy');
+                $('#Select_MasterValueInContext_PartitionKey option:contains(' + user['PartitionKey'] + ')').prop('selected', true);
+                $('#Select_MasterValueInContext_PartitionKey').attr('disabled', 'disabled');
+                $('#Select_MasterValueInContext_PartitionKey').material_select();
+
+                // Remove valid class for dropdownlist, as it is disabled
+                $('.select-wrapper').removeClass('valid');
+
+                // Map Name
+                $('#MasterValueInContext_Name').val(user["Name"]);
+                $('#MasterValueInContext_Name').addClass('valid');
+                // Map IsActive
+                $('#MasterValueInContext_IsActive').prop('checked', user["IsActive"] === true ? true : false);
+
+                $('.btnSubmit').text('Save');
+                Materialize.updateTextFields();
+            });
+
+            // Dropdown change event
+            $(document).on('change', '#ddlMasterKeys', function () {
+                table.ajax.url('@Url.Action("MasterValuesByKey","MasterData")' + '?key=' + $('#ddlMasterKeys option:selected').text());
+                table.ajax.reload();
+            });
+
+            // Save/Create Button Click Event
+            $(document).on('click', '.btnSubmit', function () {
+                var form = $("#formMasterValue");
+                if ($(form).valid()) {
+                    // Create the POST Object
+                    var masterData = new Object();
+                    masterData.Name = $('#MasterValueInContext_Name').val();
+                    masterData.PartitionKey = $('#Select_MasterValueInContext_PartitionKey option:selected').text();
+                    masterData.IsActive = $('#MasterValueInContext_IsActive').is(':checked');
+
+                    if ($('#IsEdit').val())
+                        masterData.RowKey = $('#MasterValueInContext_RowKey').val();
+
+                    // POST the data to server
+                    $.post('@Url.Action("MasterValues", "MasterData")',
+                        { masterValue: masterData, isEdit: $('#IsEdit').val() },
+                        function (data, status, xhr) {
+                            table.ajax.url('@Url.Action("MasterValuesByKey","MasterData")' + '?key=' + $('#ddlMasterKeys option:selected').text());
+                            table.ajax.reload();
+                        });
+
+                    // Reset the form
+                    $('.reset').click();
+
+                    // Remove valid class for materialize css dropdown, otherwise there is a CSS distortion
+                    $('.select-wrapper').removeClass('valid');
+                }
+            });
+        });
+    </script>
+}

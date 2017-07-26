@@ -43,7 +43,7 @@ namespace ASC.Tests.TestUtilities
 
         public bool TryGetValue(string key, out byte[] value)
         {
-            if (sessionFactory[key] != null)
+            if (sessionFactory.ContainsKey(key) && sessionFactory[key] != null)
             {
                 value = sessionFactory[key];
                 return true;

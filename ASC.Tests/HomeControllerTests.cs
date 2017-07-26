@@ -60,16 +60,16 @@ namespace ASC.Tests
             Assert.Equal(0, (controller.Index() as ViewResult).ViewData.ModelState.ErrorCount);
         }
 
-        //[Fact]
-        //public void HomeController_Index_Session_Test()
-        //{
-        //    var controller = new HomeController(optionsMock.Object);
-        //    controller.ControllerContext.HttpContext = mockHttpContext.Object;
+        [Fact]
+        public void HomeController_Index_Session_Test()
+        {
+            var controller = new HomeController(optionsMock.Object);
+            controller.ControllerContext.HttpContext = mockHttpContext.Object;
 
-        //    controller.Index();
+            controller.Index();
 
-        //    // Session value with key "Test" should not be null.
-        //    Assert.NotNull(controller.HttpContext.Session.GetSession<ApplicationSettings>("Test"));
-        //}
+            // Session value with key "Test" should not be null.
+            Assert.NotNull(controller.HttpContext.Session.GetSession<ApplicationSettings>("Test"));
+        }
     }
 }

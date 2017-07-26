@@ -4,4 +4,6 @@ sudo: required
 mono: none
 dotnet: 1.0.3
 script:
-  - ./build.sh --quiet verify
+  - dotnet restore
+  - dotnet test ./ASC.Tests/ASC.Tests.csproj
+  - dotnet build

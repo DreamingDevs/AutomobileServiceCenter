@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <UserSecretsId>aspnet-ASC.Web-9D645DBB-9112-4508-9007-84D07A1B38F0</UserSecretsId>
     <PackageTargetFallback>portable-net45+win8</PackageTargetFallback>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <PreBuildEvent></PreBuildEvent>
   </PropertyGroup>
 
